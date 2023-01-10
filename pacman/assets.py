@@ -1,31 +1,52 @@
 
 from .sprites import pygame, empty_maze
+from .actors import np
+from .maze import *
 
-class Tile:
-    pass
 
+WHITE = "#ffffff"
 
-class Intersection:
-    pass
 
 
 class PacMaze:
-    def __init__(self, scale=1):
-        self.scale = scale
+    def __init__(self, scale=2):
         if scale > 1:
             self.visual = pygame.transform.scale(
                 empty_maze, (empty_maze.get_width()*scale, empty_maze.get_height()*scale))
         else:
             self.visual = empty_maze
         self.size = self.visual.get_width(), self.visual.get_height()
+        self.tile_size = 8*scale
+        self.map = MAZE_MAP
         self.grid = []
         for j in range(36):
             for i in range(28):
-                self.grid.append(pygame.Rect(
-                    i*8*scale, j*8*scale, 8*scale, 8*scale))
+                temp = pygame.Rect(
+                    i*self.tile_size, j*self.tile_size, self.tile_size, self.tile_size)
+                self.grid.append(temp)
+        self.scale = scale
 
     def draw_on(self, surface, grids=False):
         surface.blit(self.visual, (0, 24*self.scale))
         if grids:
-            for cell in self.grid:
-                pygame.draw.rect(surface, "#ffffff", cell, width=1)
+            for tile in self.grid:
+                pygame.draw.rect(surface, WHITE, tile, width=1)
+        else:
+            for tile in self.grid:
+                if self.map[self.grid.index(tile)] in [2, 6]:
+                    pygame.draw.circle(surface, WHITE, tile.center, 1*self.scale)
+                if self.map[self.grid.index(tile)] in [3, 7]:
+                    pygame.draw.circle(surface, WHITE, tile.center, 4*self.scale)
+
+
+
+    def __iter__(self):
+        for tile in self.grid:
+            yield tile
+
+    def __getitem__(self, key):
+        return self.grid[key]
+
+    def at(self, x, y):
+        i = y*28+x
+        return self[i]

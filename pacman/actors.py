@@ -8,7 +8,8 @@ DIRECTION_NORMS = [np.array([1, 0]), np.array(
 
 
 class Pacman():
-    def __init__(self, center=None, speed=1, scale=1):
+    def __init__(self, maze, speed=1, scale=2):
+        self.maze = maze
         self.sprites = []
         for i in range(2):
             for j in range(4):
@@ -17,12 +18,22 @@ class Pacman():
                 self.sprites.append(sprite)
         self.sprite_turn = 0
         self.center = np.array([116*scale, 164*scale])
+        self.tile = maze[0]
         self.velocity = DIRECTION_NORMS[0]*speed
         self.scale = scale
         self.size = self.sprites[0].get_width(), self.sprites[0].get_height()
 
+    def current_tile(self):
+        return self.maze.at(*(self.center//self.maze.tile_size))
+
+    def eat(self, current_tile_i):
+        self.maze.map[current_tile_i] = 1
+
     def displace(self):
         self.center += self.velocity
+        current_tile_i = self.maze.grid.index(self.current_tile())
+        if self.maze.map[current_tile_i] in [2, 6, 7]:
+            self.eat(current_tile_i)
         #self.sprite_turn = (self.sprite_turn + 1) % 3
 
     def draw_on(self, surface):
