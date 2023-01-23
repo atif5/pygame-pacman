@@ -1,5 +1,5 @@
 
-print(__package__)
+print(__package__, "now initializing")
 
 from . import sprites
 from . import actors

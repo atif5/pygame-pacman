@@ -7,7 +7,6 @@ from .maze import *
 WHITE = "#ffffff"
 
 
-
 class PacMaze:
     def __init__(self, scale=2):
         if scale > 1:
@@ -34,19 +33,18 @@ class PacMaze:
         else:
             for tile in self.grid:
                 if self.map[self.grid.index(tile)] in [2, 6]:
-                    pygame.draw.circle(surface, WHITE, tile.center, 1*self.scale)
+                    pygame.draw.circle(
+                        surface, WHITE, tile.center, 1*self.scale)
                 if self.map[self.grid.index(tile)] in [3, 7]:
-                    pygame.draw.circle(surface, WHITE, tile.center, 4*self.scale)
-
-
+                    pygame.draw.circle(
+                        surface, WHITE, tile.center, 4*self.scale)
 
     def __iter__(self):
-        for tile in self.grid:
-            yield tile
+        for abstract in self.map:
+            yield abstract
 
     def __getitem__(self, key):
-        return self.grid[key]
+        return self.map[key]
 
-    def at(self, x, y):
-        i = y*28+x
-        return self[i]
+    def __setitem__(self, key, value):
+        self.map[key] = value

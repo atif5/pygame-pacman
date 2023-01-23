@@ -10,6 +10,9 @@ logic = {
     7: "intersection-energizer"
 }
 
+FOOD = [2, 3, 6, 7]
+INTERSECTION = [4, 6, 7]
+
 MAZE_MAP = [  # initial
 
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -51,14 +54,5 @@ MAZE_MAP = [  # initial
 ]
 
 
-def tile_up(tile_i):
-    return MAZE_MAP[tile_i-28]
-
-def tile_down(tile_i):
-    return MAZE_MAP[tile_i+28]
-
-def tile_left(tile_i):
-    return MAZE_MAP[tile_i-1]
-
-def tile_right(tile_i):
-    return MAZE_MAP[tile_i+1]
+def maze_relative(ri, vec): 
+    return ri+vec[1]*28+vec[0]
