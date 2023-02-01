@@ -5,6 +5,7 @@ from .maze import *
 
 
 WHITE = "#ffffff"
+BLACK = "#000000"
 
 
 class PacMaze:
@@ -24,20 +25,22 @@ class PacMaze:
                     i*self.tile_size, j*self.tile_size, self.tile_size, self.tile_size)
                 self.grid.append(temp)
         self.scale = scale
+        self.food_size = self.scale
+        self.energizer_size = 3*self.scale
+        self.food_map = [(abstract in FOOD).real for abstract in self]
 
-    def draw_on(self, surface, grids=False):
+
+    def draw_on(self, surface):
         surface.blit(self.visual, (0, 24*self.scale))
-        if grids:
-            for tile in self.grid:
-                pygame.draw.rect(surface, WHITE, tile, width=1)
-        else:
-            for tile in self.grid:
-                if self.map[self.grid.index(tile)] in [2, 6]:
+        start = 113; end = 951
+        for i, tile in enumerate(self.grid[start:end], start):
+            if self.food_map[i]:
+                if self[i] in [2, 6]:
                     pygame.draw.circle(
-                        surface, WHITE, tile.center, 1*self.scale)
-                if self.map[self.grid.index(tile)] in [3, 7]:
+                        surface, WHITE, tile.center, self.food_size)
+                if self[i] in [3, 7]:
                     pygame.draw.circle(
-                        surface, WHITE, tile.center, 4*self.scale)
+                        surface, WHITE, tile.center, self.energizer_size)
 
     def __iter__(self):
         for abstract in self.map:

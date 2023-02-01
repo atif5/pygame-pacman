@@ -8,9 +8,105 @@ DIRECTION_NORMS = [np.array([1, 0]), np.array(
     [-1, 0]), np.array([0, -1]), np.array([0, 1])]
 
 
-class Pacman():
-    def __init__(self, maze, speed=1, scale=2):
+RIGHT = 0
+LEFT = 1
+UP = 2
+DOWN = 3
+
+
+class Actor:
+    def __init__(self, maze, center, speed, initdir_index):
         self.maze = maze
+        self.center = center
+        self.speed = speed
+        # direction index, that is an integer indicating the velocity normals position in the DIRECTION_NORMS list
+        self.direction = initdir_index
+        ###  ###
+        self.velocity = DIRECTION_NORMS[self.direction]*self.speed
+        cx, cy = self.grid_pos()
+        self.ct_index = cy*28+cx  # current tile index
+
+    def grid_pos(self):
+        return self.center//self.maze.tile_size
+
+    def nt_index(self):  # next tile index
+        return maze_relative(self.ct_index, DIRECTION_NORMS[self.direction])
+
+    # abstract is an integer value representing the attribute and the state of the tile
+    def current_abstract(self) -> int:
+        return self.maze[self.ct_index]
+
+    # return the current rectangle
+    def current_rect(self) -> pygame.Rect:
+        return self.maze.grid[self.ct_index]
+
+    def next_abstract(self, nt_index):
+        return self.maze[nt_index]
+
+    def next_rect(self, nt_index):
+        return self.maze.grid[nt_index]
+
+    def reverse_direction(self):
+        if self.direction < 2:
+            return (not self.direction).real
+        else:
+            if self.direction == UP:
+                return DOWN
+            else:
+                return UP
+
+    def environment(self, next=False) -> list:
+        environ = list()
+        ri = self.nt_index() if next else self.ct_index
+        for direction in DIRECTION_NORMS:
+            environ.append(self.maze[maze_relative(ri, direction)])
+        return environ
+
+    # returns the indices of possible directions
+    def possible_directions(self, next=False) -> filter:
+        environ = self.environment(next=next)
+        reverse = self.reverse_direction()
+        possibles = [LEFT, RIGHT, UP, DOWN]
+        return filter(lambda direction: bool(environ[direction]) and direction != reverse, possibles)
+
+    def precise(self) -> bool:
+        return (self.center == self.current_rect().center).all()
+
+    def at_intersection(self):
+        abstract = self.current_abstract()
+        return (abstract in INTERSECTION and self.precise())
+
+    def turn(self, new_direction: int):
+        self.direction = new_direction
+        self.velocity = DIRECTION_NORMS[self.direction]*self.speed
+
+    def displace(self):
+        if self.handle_tunneling():
+            return
+        self.center += self.velocity
+        cx, cy = self.grid_pos()
+        new = cy*28+cx
+        if self.ct_index != new:
+            self.ct_index = new
+            self.on_next_tile()
+
+    def handle_tunneling(self) -> bool:
+        if (self.center == (-20*self.maze.scale, 140*self.maze.scale)).all() and self.direction == LEFT:
+            self.center += (248*self.maze.scale, 0)
+            return True
+        elif (self.center == (244*self.maze.scale, 140*self.maze.scale)).all() and self.direction == RIGHT:
+            self.center -= (248*self.maze.scale, 0)
+            return True
+        return False
+
+    def on_next_tile(self):
+        pass
+
+
+class Pacman(Actor):
+    def __init__(self, maze, speed=2, scale=2):  # maze is a PacMaze object
+        super().__init__(maze, np.array([116*scale, 212*scale]), speed, RIGHT)
+        # sprite init
         sun = pygame.transform.scale(char_sprites.subsurface(
             pygame.Rect(37, 1, 13, 13)), (13*scale, 13*scale))
         self.sprites = [[sun], [sun], [sun], [sun]]
@@ -20,70 +116,34 @@ class Pacman():
                     pygame.Rect(5+i*16, 1+j*16, 13, 13)), (13*scale, 13*scale))
                 for _ in range(3):
                     self.sprites[j].append(sprite)
-        print(self.sprites)
+        ###  ###
         self.sprite_turn = 0
-        self.center = np.array([116*scale, 164*scale])
-        self.speed = speed
-        self.dir_i = 0
-        self.velocity = DIRECTION_NORMS[self.dir_i]*self.speed
-        self.scale = scale
         self.size = 13*scale, 13*scale
+        self.ate = False
 
-    def grid_pos(self):
-        return self.center//self.maze.tile_size
-
-    def current_tile_i(self):
-        x, y = self.grid_pos()  
-        return y*28+x
-
-    def next_tile_i(self, current_tile_i):
-        nx, ny = DIRECTION_NORMS[self.dir_i]
-        return current_tile_i+nx+ny*28
-
-    def current_abstract(self): #abstract is an integer value representing the attribute and the state of the tile
-        return self.maze[self.current_tile_i()]
-
-    def current_rect(self):     #return the current rectangle this pacman is on
-        return self.maze.grid[self.current_tile_i()]
-
-    def next_abstract(self):
-        current_tile_i = self.current_tile_i()
-        next_tile_i = self.next_tile_i(current_tile_i)
-        return self.maze[next_tile_i]
-    
-    def next_rect(self):
-        current_tile_i = self.current_tile_i()
-        next_tile_i = self.next_tile_i(current_tile_i)
-        return self.maze.grid[next_tile_i]
-
-    def precise(self):
-        return (self.center == self.current_rect().center).all()
-
-    def at_intersection(self):
-        abstract = self.current_abstract()
-        return (abstract in INTERSECTION and self.precise())
-
-    def turn(self, new_dir: int):
-        self.dir_i = new_dir
-        self.velocity = DIRECTION_NORMS[self.dir_i]*self.speed
-
-    def eat(self, current_tile_i):
-        old = self.maze[current_tile_i]
+    def eat(self) -> None:
+        old = self.current_abstract()
         if old in INTERSECTION:
-            self.maze[current_tile_i] = 4
+            self.maze[self.ct_index] = 4
         else:
-            self.maze[current_tile_i] = 1
+            self.maze[self.ct_index] = 1
+        self.ate = True
 
-    def displace(self):
-        abstract, current_tile_i = self.current_abstract(), self.current_tile_i()
-        nabstract, next_tile_i = self.next_abstract(), self.next_tile_i(current_tile_i)
-        if abstract in FOOD:
-            self.eat(current_tile_i)
-        if not nabstract and self.precise():
+    def move(self) -> None:
+        abstract = self.current_abstract()
+        nt_index = self.nt_index()
+        nabstract = self.next_abstract(nt_index)
+        if not nabstract and self.precise() and self.ct_index not in TUNNEL:
             self.velocity *= 0
-        self.sprite_turn = (self.sprite_turn + 1) % 7
-        self.center += self.velocity
+        else:
+            self.sprite_turn = (self.sprite_turn + 1) % 7
+        if not self.ate:
+            self.displace()
+        else:
+            self.ate = False
+        if abstract in FOOD:
+            self.eat()
 
     def draw_on(self, surface):
-        surface.blit(self.sprites[self.dir_i][self.sprite_turn],
+        surface.blit(self.sprites[self.direction][self.sprite_turn],
                      self.center-(self.size[0]/2, self.size[1]/2))
