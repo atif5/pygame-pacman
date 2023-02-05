@@ -3,6 +3,7 @@
 from .actors import *
 from .sprites import pygame, char_sprites
 import math
+import random
 
 DN = DIRECTION_NORMS
 
@@ -60,16 +61,24 @@ class PacManGhost(Actor):
     # ghosts will be initialized by strings, with their names
     def __init__(self, maze, name: str, speed, scale=2):
         self.name = name
-        self.scatter_target, sprite_offset, direction, ndirection, center, self.guide = GHOST_DATA[
+        self.scatter_target, sprite_offset, direction, ndirection, self.icenter, self.guide = GHOST_DATA[
             self.name]
-        super().__init__(maze, center*maze.scale, speed, direction)
+        super().__init__(maze, self.icenter*maze.scale, speed, direction)
+        self.icenter *= self.maze.scale
         # sprite init
         self.sprites = list()
+        self.frightened_sprites = list()
         for i in range(8):
             sprite = pygame.transform.scale(char_sprites.subsurface(
                 pygame.Rect(5+i*16, sprite_offset, 14, 14)), (14*scale, 14*scale))
             for _ in range(4):
                 self.sprites.append(sprite)
+        for i in range(2):
+            sprite = pygame.transform.scale(char_sprites.subsurface(
+                pygame.Rect(133+16*i, 65, 14, 14)), (14*scale, 14*scale))
+            for _ in range(4):
+                self.frightened_sprites.append(sprite)
+
         self.sprite_turn = 0
         ###  ###
         self.mode = SCATTER
@@ -81,10 +90,10 @@ class PacManGhost(Actor):
         if self.in_pen():
             self.wait()
             return
-        if self.handle_tunneling():
+        if self.handle_tunneling(ghost=True):
             return
         self.center += self.velocity
-        if self.at_intersection() or self.at_pen_exit():
+        if self.precise() or self.at_pen_exit():
             self.turn(self.direction)
         cx, cy = self.grid_pos()
         new = cy*28+cx
@@ -99,20 +108,30 @@ class PacManGhost(Actor):
     def look_ahead(self, game_context) -> int:  # returns the next direction
         nt_index = self.nt_index()
         nabstract = self.next_abstract(nt_index)
-        if nabstract not in GHOST_INTERSECTION:
+        if nabstract not in INTERSECTION:
             return self.direction
 
         if self.mode == CHASE:
             self.target = self.guide(game_context)
         elif self.mode == SCATTER:
             self.target = self.scatter_target
-        
-        return min(self.possible_directions(next=True),
+        elif self.mode == FRIGHTENED:
+            return random.choice(list(self.possible_directions(next=True)))
+        possibles = list(self.possible_directions(next=True))
+        if nt_index in UP_FORBIDDEN:
+            if UP in possibles:
+                possibles.remove(UP)
+
+        return min(possibles,
                    key=lambda t: triangulate(maze_relative(nt_index, DN[t]), self.target))
 
     def draw_on(self, surface):
-        surface.blit(self.sprites[self.direction*8+self.sprite_turn],
-                     self.center-(self.size[0]/2, self.size[1]/2))
+        if self.mode == FRIGHTENED:
+            surface.blit(self.frightened_sprites[self.sprite_turn],
+                         self.center-(self.size[0]/2, self.size[1]/2))
+        else:
+            surface.blit(self.sprites[8*self.direction+self.sprite_turn],
+                         self.center-(self.size[0]/2, self.size[1]/2))
 
     def on_next_tile(self, game_context):
         self.direction = self.next_direction
@@ -122,7 +141,7 @@ class PacManGhost(Actor):
         return self.current_abstract() == 8
 
     def at_pen_exit(self):
-        return self.current_abstract() == 10 and \
+        return self.current_abstract() == 9 and \
             (self.center == (112*self.maze.scale, 116*self.maze.scale)).all() and \
             self.direction == RIGHT
 

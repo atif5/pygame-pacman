@@ -1,11 +1,7 @@
 
-from .sprites import pygame, empty_maze
+from .sprites import pygame, empty_maze, WHITE, BLACK
 from .actors import np
 from .maze import *
-
-
-WHITE = "#ffffff"
-BLACK = "#000000"
 
 
 class PacMaze:

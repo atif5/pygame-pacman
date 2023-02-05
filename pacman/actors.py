@@ -63,13 +63,13 @@ class Actor:
         return environ
 
     # returns the indices of possible directions
-    def possible_directions(self, next=False) -> filter:
+    def possible_directions(self, next=False) -> list:
         environ = self.environment(next=next)
         reverse = self.reverse_direction()
         possibles = [LEFT, RIGHT, UP, DOWN]
-        return filter(lambda direction: bool(environ[direction]) and direction != reverse, possibles)
+        return list(filter(lambda direction: bool(environ[direction]) and direction != reverse, possibles))
 
-    def precise(self) -> bool:
+    def precise(self, tolerance=None) -> bool:
         return (self.center == self.current_rect().center).all()
 
     def at_intersection(self):
@@ -90,13 +90,29 @@ class Actor:
             self.ct_index = new
             self.on_next_tile()
 
-    def handle_tunneling(self) -> bool:
-        if (self.center == (-20*self.maze.scale, 140*self.maze.scale)).all() and self.direction == LEFT:
-            self.center += (248*self.maze.scale, 0)
+    def handle_tunneling(self, ghost=False) -> bool:
+        s = self.maze.scale
+        y = 140*s
+        if (self.center < (-20*s, y+1)).all() and self.direction == LEFT:
+            self.center += (248*s, 0)
             return True
-        elif (self.center == (244*self.maze.scale, 140*self.maze.scale)).all() and self.direction == RIGHT:
-            self.center -= (248*self.maze.scale, 0)
+        elif (self.center > (244*s, y-1)).all() and self.direction == RIGHT:
+            self.center -= (248*s, 0)
             return True
+
+        if ghost:
+            if (self.center == (44*s, y)).all():
+                if self.direction == LEFT:
+                    self.speed //= 2
+                elif self.direction == RIGHT:
+                    self.speed *= 2
+
+            if (self.center == (180*s, y)).all():
+                if self.speed == LEFT:
+                    self.speed *= 2
+                elif self.direction == RIGHT:
+                    self.speed //= 2
+
         return False
 
     def on_next_tile(self):
@@ -105,7 +121,7 @@ class Actor:
 
 class Pacman(Actor):
     def __init__(self, maze, speed=2, scale=2):  # maze is a PacMaze object
-        super().__init__(maze, np.array([116*scale, 212*scale]), speed, RIGHT)
+        super().__init__(maze, np.array([116*scale, 212*scale]), speed, LEFT)
         # sprite init
         sun = pygame.transform.scale(char_sprites.subsurface(
             pygame.Rect(37, 1, 13, 13)), (13*scale, 13*scale))
@@ -120,6 +136,7 @@ class Pacman(Actor):
         self.sprite_turn = 0
         self.size = 13*scale, 13*scale
         self.ate = False
+        self.energized = False
 
     def eat(self) -> None:
         old = self.current_abstract()
@@ -127,7 +144,10 @@ class Pacman(Actor):
             self.maze[self.ct_index] = 4
         else:
             self.maze[self.ct_index] = 1
+
         self.ate = True
+        if old in ENERGIZER:
+            self.energized = True
 
     def move(self) -> None:
         abstract = self.current_abstract()
