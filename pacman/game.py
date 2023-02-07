@@ -64,7 +64,8 @@ class PacmanGame:
     def handle_frightening_time(self, tick):
         if self.ftimer < 2:
             for ghost in self.ghosts:
-                ghost.blinking = True
+                if ghost.mode == ghosts.FRIGHTENED:
+                    ghost.blinking = True
         if self.ftimer > 0:
             self.ftimer -= tick
         else:
@@ -127,6 +128,7 @@ class PacmanGame:
     def main(self):
         clock = pygame.time.Clock()
         while not self.over:
+            print(self.blinky.blinking)
             self.over = True if pygame.QUIT in map(
                 lambda e: e.type, pygame.event.get()) else self.over
             self.handle_input()
@@ -141,9 +143,9 @@ class PacmanGame:
                 self.pacman.energized = False
             self.draw()
             pygame.display.flip()
-            seconds_passed = clock.tick(55)/1000
+            seconds_passed = clock.tick(60)/1000
             if self.mode != ghosts.FRIGHTENED:
                 self.time += seconds_passed
-            if self.mode == ghosts.FRIGHTENED:
+            else:
                 self.handle_frightening_time(seconds_passed)
             self.handle_events()

@@ -83,15 +83,17 @@ class PacManGhost(Actor):
             for _ in range(5):
                 self.sprites.append(sprite)
         for i in range(2):
-            sprite1 = pygame.transform.scale(char_sprites.subsurface(
+            sprite = pygame.transform.scale(char_sprites.subsurface(
                 pygame.Rect(133+16*i, 65, 14, 14)), (14*scale, 14*scale))
-            for _ in range(5):
-                self.frightened_sprites.append(sprite1)
-            for _ in range(4):
-                self.blinking_sprites.append(sprite1)
-            sprite2 = pygame.transform.scale(char_sprites.subsurface(
+            for _ in range(5): 
+                self.frightened_sprites.append(sprite)
+                self.blinking_sprites.append(sprite)
+            
+        for i in range(2):
+            sprite = pygame.transform.scale(char_sprites.subsurface(
                 pygame.Rect(165+16*i, 65, 14, 14)), (14*scale, 14*scale))
-            self.blinking_sprites.append(sprite2)
+            for _ in range(10): 
+                self.blinking_sprites.append(sprite)
         
         for i in range(4):
             sprite = pygame.transform.scale(char_sprites.subsurface(
@@ -110,7 +112,7 @@ class PacManGhost(Actor):
         self.exiting = False
         self.entering = False
         self.gonna_double = None
-        self.blinking = None
+        self.blinking = False
 
     def displace(self, game_context):
         if self.handle_special():
@@ -132,7 +134,7 @@ class PacManGhost(Actor):
 
     def move(self, game_context):
         self.displace(game_context=game_context)
-        self.sprite_turn = (self.sprite_turn + 1) % 10
+        self.sprite_turn = (self.sprite_turn + 1) % (10 + 20*(self.blinking).real)
 
     def look_ahead(self, game_context) -> int:  # returns the next direction
         nt_index = self.nt_index()
@@ -189,6 +191,7 @@ class PacManGhost(Actor):
             self.returning = False
             self.entering = False
             self.mode = CHASE
+            self.blinking = False
             self.exiting = True
 
     def exit(self) -> None: #most of the time
@@ -249,7 +252,9 @@ class PacManGhost(Actor):
                          self.center-(self.size[0]/2, self.size[1]/2))
 
         else:
-            surface.blit(self.sprites[10*self.direction+self.sprite_turn],
+            if self.sprite_turn > 10:
+                print(self, self.sprite_turn, self.blinking)
+            surface.blit(self.sprites[10*self.direction+(self.sprite_turn)],
                          self.center-(self.size[0]/2, self.size[1]/2))
 
     def __str__(self):
