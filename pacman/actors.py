@@ -2,7 +2,7 @@
 
 from .sprites import char_sprites, pygame
 import numpy as np
-from .maze import *
+from .maze_logic import *
 
 DIRECTION_NORMS = [np.array([1, 0]), np.array(
     [-1, 0]), np.array([0, -1]), np.array([0, 1])]

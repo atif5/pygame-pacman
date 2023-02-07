@@ -1,7 +1,7 @@
 
 from .sprites import pygame, empty_maze, WHITE, BLACK
 from .actors import np
-from .maze import *
+from .maze_logic import *
 
 
 class PacMaze:
