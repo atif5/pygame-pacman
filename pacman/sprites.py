@@ -14,6 +14,7 @@ pacfont = pygame.font.Font(path.join(root, "fonts", "PAC-FONT.TTF"), 20)
 
 spritesheet = pygame.image.load(path.join(root, "sprites", "pacmap.png"))
 empty_maze = spritesheet.subsurface(pygame.Rect(228, 0, 224, 248))
+dot_maze = spritesheet.subsurface(pygame.Rect(0, 0, 224, 248))
 
 char_sprites = spritesheet.subsurface(pygame.Rect(452, 0, 228, 248))
 char_sprites.set_colorkey(BLACK)

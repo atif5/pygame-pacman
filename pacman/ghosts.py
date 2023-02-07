@@ -76,16 +76,22 @@ class PacManGhost(Actor):
         self.sprites = list()
         self.frightened_sprites = list()
         self.eyes = list()
+        self.blinking_sprites = list()
         for i in range(8):
             sprite = pygame.transform.scale(char_sprites.subsurface(
                 pygame.Rect(5+i*16, sprite_offset, 14, 14)), (14*scale, 14*scale))
             for _ in range(5):
                 self.sprites.append(sprite)
         for i in range(2):
-            sprite = pygame.transform.scale(char_sprites.subsurface(
+            sprite1 = pygame.transform.scale(char_sprites.subsurface(
                 pygame.Rect(133+16*i, 65, 14, 14)), (14*scale, 14*scale))
             for _ in range(5):
-                self.frightened_sprites.append(sprite)
+                self.frightened_sprites.append(sprite1)
+            for _ in range(4):
+                self.blinking_sprites.append(sprite1)
+            sprite2 = pygame.transform.scale(char_sprites.subsurface(
+                pygame.Rect(165+16*i, 65, 14, 14)), (14*scale, 14*scale))
+            self.blinking_sprites.append(sprite2)
         
         for i in range(4):
             sprite = pygame.transform.scale(char_sprites.subsurface(
@@ -104,6 +110,7 @@ class PacManGhost(Actor):
         self.exiting = False
         self.entering = False
         self.gonna_double = None
+        self.blinking = None
 
     def displace(self, game_context):
         if self.handle_special():
@@ -231,7 +238,11 @@ class PacManGhost(Actor):
 
     def draw_on(self, surface):
         if self.mode == FRIGHTENED and not self.eaten:
-            surface.blit(self.frightened_sprites[self.sprite_turn],
+            if self.blinking:
+                surface.blit(self.blinking_sprites[self.sprite_turn],
+                            self.center-(self.size[0]/2, self.size[1]/2))
+            else:
+                surface.blit(self.frightened_sprites[self.sprite_turn],
                          self.center-(self.size[0]/2, self.size[1]/2))
         elif self.eaten:
             surface.blit(self.eyes[self.direction],

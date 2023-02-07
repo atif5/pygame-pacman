@@ -36,6 +36,7 @@ class PacmanGame:
         self.ftimer = 6
         self.mode = ghosts.SCATTER
         self.score = 0
+        self.food = 244
         self.over = False
 
         self.events = [(2, self.release, self.pinky), (10, self.change_mode, ghosts.CHASE),
@@ -50,6 +51,7 @@ class PacmanGame:
                 self.events.remove(event)
 
     def frighten(self):
+        self.ftimer = 6
         self.change_mode(ghosts.FRIGHTENED)
         for ghost in self.ghosts:
             if ghost.in_pen() or ghost.exiting:
@@ -60,12 +62,16 @@ class PacmanGame:
         ghost.exiting = True
 
     def handle_frightening_time(self, tick):
-        if self.mode == ghosts.FRIGHTENED:
-            if self.ftimer > 0:
-                self.ftimer -= tick
-            else:
-                self.ftimer = 6
-                self.change_mode(ghosts.CHASE)
+        if self.ftimer < 2:
+            for ghost in self.ghosts:
+                ghost.blinking = True
+        if self.ftimer > 0:
+            self.ftimer -= tick
+        else:
+            self.ftimer = 6
+            for ghost in self.ghosts:
+                ghost.blinking = False
+            self.change_mode(ghosts.CHASE)
 
     def change_mode(self, new_mode):
         print("changing mode to:", new_mode)
@@ -99,6 +105,10 @@ class PacmanGame:
             return
         self.pacman.draw_on(self.screen)
 
+    def update(self):
+        c = self.maze.grid[self.pacman.ct_index].center
+        pygame.draw.circle(self.maze.visual, sprites.BLACK, (c[0], c[1]-24*self.scale), 9)
+
     def handle_collisions(self):
         for ghost in self.ghosts:
             if ghost.ct_index == self.pacman.ct_index:
@@ -117,19 +127,23 @@ class PacmanGame:
     def main(self):
         clock = pygame.time.Clock()
         while not self.over:
-            print(self.blinky.velocity)
             self.over = True if pygame.QUIT in map(
                 lambda e: e.type, pygame.event.get()) else self.over
             self.handle_input()
             self.step()
+            if self.pacman.ate:
+                self.food -= 1
+                self.update()
+                if not self.food:
+                    self.over = True
             if self.pacman.energized:
                 self.frighten()
                 self.pacman.energized = False
             self.draw()
-            pygame.draw.circle(self.screen, "#00ff00", self.blinky.center, 2)
             pygame.display.flip()
-            seconds_passed = clock.tick(60)/1000
+            seconds_passed = clock.tick(55)/1000
             if self.mode != ghosts.FRIGHTENED:
                 self.time += seconds_passed
-            self.handle_frightening_time(seconds_passed)
+            if self.mode == ghosts.FRIGHTENED:
+                self.handle_frightening_time(seconds_passed)
             self.handle_events()
