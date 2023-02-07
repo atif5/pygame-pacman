@@ -66,7 +66,7 @@ class Actor:
     def possible_directions(self, next=False) -> list:
         environ = self.environment(next=next)
         reverse = self.reverse_direction()
-        possibles = [LEFT, RIGHT, UP, DOWN]
+        possibles = [UP, LEFT, DOWN, RIGHT]
         return list(filter(lambda direction: bool(environ[direction]) and direction != reverse, possibles))
 
     def precise(self, tolerance=None) -> bool:
@@ -90,7 +90,7 @@ class Actor:
             self.ct_index = new
             self.on_next_tile()
 
-    def handle_tunneling(self, ghost=False) -> bool:
+    def handle_tunneling(self) -> bool:
         s = self.maze.scale
         y = 140*s
         if (self.center < (-20*s, y+1)).all() and self.direction == LEFT:
@@ -99,19 +99,6 @@ class Actor:
         elif (self.center > (244*s, y-1)).all() and self.direction == RIGHT:
             self.center -= (248*s, 0)
             return True
-
-        if ghost:
-            if (self.center == (44*s, y)).all():
-                if self.direction == LEFT:
-                    self.speed //= 2
-                elif self.direction == RIGHT:
-                    self.speed *= 2
-
-            if (self.center == (180*s, y)).all():
-                if self.speed == LEFT:
-                    self.speed *= 2
-                elif self.direction == RIGHT:
-                    self.speed //= 2
 
         return False
 

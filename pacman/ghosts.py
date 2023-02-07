@@ -13,6 +13,12 @@ CHASE = 1
 FRIGHTENED = 2
 # # #
 
+RETARGET = 405
+
+
+# position of the exit of the monster pen
+GATEWAY = np.array((112, 116))
+
 
 def triangulate(tile_pos1, tile_pos2):
     x1, y1 = tile_pos1 % 28, tile_pos1//28
@@ -50,9 +56,9 @@ def clyde_target(game_context):
 
 GHOST_DATA = {
     "Blinky": [25, 65, LEFT, LEFT, np.array((112, 116)), blinky_target],
-    "Pinky": [2, 81, LEFT, LEFT, np.array((112, 116)), pinky_target],
-    "Inky": [979, 97, LEFT, LEFT, np.array((112, 116)), inky_target],
-    "Clyde": [952, 113, LEFT, LEFT, np.array((112, 116)), clyde_target]
+    "Pinky": [2, 81, UP, LEFT, np.array((112, 140)), pinky_target],
+    "Inky": [979, 97, DOWN, LEFT, np.array((96, 140)), inky_target],
+    "Clyde": [952, 113, DOWN, LEFT, np.array((128, 140)), clyde_target]
 
 }
 
@@ -65,19 +71,26 @@ class PacManGhost(Actor):
             self.name]
         super().__init__(maze, self.icenter*maze.scale, speed, direction)
         self.icenter *= self.maze.scale
+        self.ispeed = self.speed
         # sprite init
         self.sprites = list()
         self.frightened_sprites = list()
+        self.eyes = list()
         for i in range(8):
             sprite = pygame.transform.scale(char_sprites.subsurface(
                 pygame.Rect(5+i*16, sprite_offset, 14, 14)), (14*scale, 14*scale))
-            for _ in range(4):
+            for _ in range(5):
                 self.sprites.append(sprite)
         for i in range(2):
             sprite = pygame.transform.scale(char_sprites.subsurface(
                 pygame.Rect(133+16*i, 65, 14, 14)), (14*scale, 14*scale))
-            for _ in range(4):
+            for _ in range(5):
                 self.frightened_sprites.append(sprite)
+        
+        for i in range(4):
+            sprite = pygame.transform.scale(char_sprites.subsurface(
+                pygame.Rect(133+16*i, 81, 14, 14)), (14*scale, 14*scale))
+            self.eyes.append(sprite)
 
         self.sprite_turn = 0
         ###  ###
@@ -85,16 +98,25 @@ class PacManGhost(Actor):
         self.size = 14*scale, 14*scale
         self.next_direction = ndirection
         self.target = self.scatter_target
+        self.gateway = GATEWAY*self.maze.scale
+        self.eaten = False
+
+        self.exiting = False
+        self.entering = False
+        self.gonna_double = None
 
     def displace(self, game_context):
-        if self.in_pen():
-            self.wait()
+        if self.handle_special():
             return
-        if self.handle_tunneling(ghost=True):
-            return
-        self.center += self.velocity
-        if self.precise() or self.at_pen_exit():
+        if self.precise() or (self.exiting and self.at_gateway()):
             self.turn(self.direction)
+            if self.exiting:
+                self.exiting = False
+        if self.in_tunnel() and not (self.eaten or self.speed == self.ispeed//2):
+            self.center += self.velocity//2
+        else:
+            self.center += self.velocity
+
         cx, cy = self.grid_pos()
         new = cy*28+cx
         if self.ct_index != new:
@@ -103,7 +125,7 @@ class PacManGhost(Actor):
 
     def move(self, game_context):
         self.displace(game_context=game_context)
-        self.sprite_turn = (self.sprite_turn + 1) % 8
+        self.sprite_turn = (self.sprite_turn + 1) % 10
 
     def look_ahead(self, game_context) -> int:  # returns the next direction
         nt_index = self.nt_index()
@@ -116,7 +138,10 @@ class PacManGhost(Actor):
         elif self.mode == SCATTER:
             self.target = self.scatter_target
         elif self.mode == FRIGHTENED:
-            return random.choice(list(self.possible_directions(next=True)))
+            if not self.eaten:
+                return random.choice(self.possible_directions(next=True))
+        if self.eaten:
+            self.target = RETARGET
         possibles = list(self.possible_directions(next=True))
         if nt_index in UP_FORBIDDEN:
             if UP in possibles:
@@ -125,14 +150,6 @@ class PacManGhost(Actor):
         return min(possibles,
                    key=lambda t: triangulate(maze_relative(nt_index, DN[t]), self.target))
 
-    def draw_on(self, surface):
-        if self.mode == FRIGHTENED:
-            surface.blit(self.frightened_sprites[self.sprite_turn],
-                         self.center-(self.size[0]/2, self.size[1]/2))
-        else:
-            surface.blit(self.sprites[8*self.direction+self.sprite_turn],
-                         self.center-(self.size[0]/2, self.size[1]/2))
-
     def on_next_tile(self, game_context):
         self.direction = self.next_direction
         self.next_direction = self.look_ahead(game_context)
@@ -140,14 +157,92 @@ class PacManGhost(Actor):
     def in_pen(self):
         return self.current_abstract() == 8
 
-    def at_pen_exit(self):
-        return self.current_abstract() == 9 and \
-            (self.center == (112*self.maze.scale, 116*self.maze.scale)).all() and \
-            self.direction == RIGHT
+    def at_gateway(self):
+        return (self.center == self.gateway).all()
 
     def wait(self):
-        if not self.next_abstract(self.nt_index()):
+        nabstract = self.next_abstract(self.nt_index())
+        if not nabstract:
             self.turn(self.reverse_direction())
-        self.center += self.velocity
+        self.center += self.velocity//2
         cx, cy = self.grid_pos()
         self.ct_index = cy*28+cx
+
+    def enter(self) -> None:
+        dx, dy = self.center-self.icenter
+        if dy:
+            self.direction = DOWN
+            self.center += DN[DOWN]
+        elif dx:
+            self.direction = RIGHT if np.sign(dx) == -1 else LEFT
+            self.center += np.sign(dx)*DN[LEFT]
+        else:
+            self.speed //= 4
+            self.eaten = False
+            self.returning = False
+            self.entering = False
+            self.mode = CHASE
+            self.exiting = True
+
+    def exit(self) -> None: #most of the time
+        dx, dy = self.center-GATEWAY*self.maze.scale
+        if dx:
+            self.direction = RIGHT if np.sign(dx) == -1 else LEFT
+            self.center += np.sign(dx)*DN[LEFT]
+        elif dy:
+            self.direction = UP
+            self.center += DN[UP]
+        else:
+            self.direction = LEFT
+            return True
+
+    def in_tunnel(self):
+        x, y = self.center
+        return y == 140*self.maze.scale and (x < 44*self.maze.scale or x > 180*self.maze.scale)
+
+    def handle_special(self) -> bool:
+        precise = self.precise()
+        if self.eaten:
+            if self.at_gateway():
+                self.entering = True
+            elif precise:
+                if self.gonna_double:
+                    self.speed *= 4
+                    self.gonna_double = False
+        elif self.mode == FRIGHTENED:
+            if self.speed == self.ispeed:
+                if precise:
+                    self.speed //= 2
+        else:
+            if precise:
+                if self.speed == self.ispeed//2:
+                    self.speed *= 2
+        if self.entering:
+            self.enter()
+            return True
+        if self.in_pen() and not self.exiting:
+            self.wait()
+            return True
+        if self.handle_tunneling():
+            return True
+        if self.exiting:
+            return not self.exit()
+                
+
+    def draw_on(self, surface):
+        if self.mode == FRIGHTENED and not self.eaten:
+            surface.blit(self.frightened_sprites[self.sprite_turn],
+                         self.center-(self.size[0]/2, self.size[1]/2))
+        elif self.eaten:
+            surface.blit(self.eyes[self.direction],
+                         self.center-(self.size[0]/2, self.size[1]/2))
+
+        else:
+            surface.blit(self.sprites[10*self.direction+self.sprite_turn],
+                         self.center-(self.size[0]/2, self.size[1]/2))
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return f"PacmanGhost: {self.name}"

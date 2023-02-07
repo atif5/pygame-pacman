@@ -30,11 +30,12 @@ class PacMaze:
         surface.blit(self.visual, (0, 24*self.scale))
         start = 113; end = 951
         for i, tile in enumerate(self.grid[start:end], start):
+            #pygame.draw.rect(surface, WHITE, self.grid[i], width=1)
             if self.food_map[i]:
-                if self[i] in [2, 6]:
+                if self[i] in DOT:
                     pygame.draw.circle(
                         surface, WHITE, tile.center, self.food_size)
-                if self[i] in [3, 7]:
+                if self[i] in ENERGIZER:
                     pygame.draw.circle(
                         surface, WHITE, tile.center, self.energizer_size)
 
