@@ -7,7 +7,7 @@
  I have provided a batch script for windows users to install and play the game for windows. It assumes that you have git installed.
  Only thing you need to is the run the batch file by double clicking on it, complete setting up python3 and then running `play.bat` after it's generated.
  
- If the installation somehow fails or you are not a windows user, here is the manual installation process.
+ If the batch script somehow fails or you are not a windows user, here is the manual installation process.
  
 ### Installation
 You need a python 3 interpreter to play this pacman clone.
