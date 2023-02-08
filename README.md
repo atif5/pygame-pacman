@@ -46,6 +46,7 @@ Enjoy!
 ### Notes
 
 - There are numerous resources that I used (and using) to understand the game logic like: ["The Pac-Man Dossier"](https://pacman.holenet.info/) 
+- I tried to stay loyal to the original version, the ghost behaviour is almost the same, the sprites are from the original arcade.
 
  
 
