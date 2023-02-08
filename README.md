@@ -17,7 +17,7 @@ To install a python 3 interpreter follow these guidelines for: [Windows](https:/
   
 This project uses two external libraries, [pygame](https://www.pygame.org) and [numpy](https://numpy.org/).
 
-After installing python, you should install these libraries via pip:
+After installing python, you should install these libraries via [pip](https://pypi.org/project/pip/):
 
 For windows:
 
