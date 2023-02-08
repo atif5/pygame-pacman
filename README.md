@@ -12,7 +12,7 @@
 ### Installation
 You need a python 3 interpreter to play this pacman clone.
 
-To install python3 follow thes guidelines for: [Windows](https://docs.python-guide.org/starting/install3/win), [Linux](https://docs.python-guide.org/starting/install3/linux), [MacOs](https://docs.python-guide.org/starting/install3/osx)
+To install a python 3 interpreter follow these guidelines for: [Windows](https://docs.python-guide.org/starting/install3/win), [Linux](https://docs.python-guide.org/starting/install3/linux), [MacOs](https://docs.python-guide.org/starting/install3/osx)
 
   
 This project uses two external libraries, [pygame](https://www.pygame.org) and [numpy](https://numpy.org/).
