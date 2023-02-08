@@ -1,7 +1,7 @@
 # pygame-pacman
  A pacman clone made with pygame! (incomplete)
   
-# How to install and play  
+### How to install and play  
  This project is still being developed, but you are free to play it at your own risk :)
  
  I have provided a batch script for windows users to install and play the game for windows. It assumes that you have git installed.
@@ -9,7 +9,7 @@
  
  If the installation somehow fails or you are not a windows user, here is the manual installation process.
  
-# Installation
+### Installation
 You need a python 3 interpreter to play this pacman clone.
 
 To install python3 follow thes guidelines for: [Windows](https://docs.python-guide.org/starting/install3/win), [Linux](https://docs.python-guide.org/starting/install3/linux), [MacOs](https://docs.python-guide.org/starting/install3/osx)
