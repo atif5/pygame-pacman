@@ -42,6 +42,11 @@ For linux or MacOs:
 ```$ python3 -m pacman```
 
 Enjoy!
+
+### Notes
+
+- There are numerous resources that I used (and using) to understand the game logic like: ["The Pac-Man Dossier"](https://pacman.holenet.info/) 
+
  
 
  
