@@ -31,12 +31,15 @@ class PacmanGame:
             self.maze, "Clyde", 2, scale=self.scale)
 
         self.ghosts = [self.blinky, self.pinky, self.inky, self.clyde]
+        self.just_eaten = None
         self.context = (self.maze, self.pacman, self.ghosts)
-        self.time = 0
-        self.ftimer = 6
-        self.mode = ghosts.SCATTER
+        self.clock = pygame.time.Clock()
+        self.time = 0  # global time
+        self.ftimer = 6  # frightened timer
+        self.ptimer = 1.5  # pause timer
+        self.mode = ghosts.SCATTER  # current mode
         self.score = 0
-        self.food = 244
+        self.food = 244 # amount of food left
         self.over = False
 
         self.events = [(2, self.release, self.pinky), (10, self.change_mode, ghosts.CHASE),
@@ -54,6 +57,8 @@ class PacmanGame:
         self.ftimer = 6
         self.change_mode(ghosts.FRIGHTENED)
         for ghost in self.ghosts:
+            ghost.blinking = False
+            ghost.sprite_turn %= 10
             if ghost.in_pen() or ghost.exiting:
                 continue
             ghost.next_direction = ghost.reverse_direction()
@@ -88,11 +93,16 @@ class PacmanGame:
             if self.pacman.at_intersection() or i == self.pacman.reverse_direction():
                 self.pacman.turn(i)
 
-    def step(self):
-        self.pacman.move()
+    def step(self, *exclusions):
         self.handle_collisions()
         for ghost in self.ghosts:
+            if ghost in exclusions:
+                continue
             ghost.move(self.context)
+        
+        if self.pacman in exclusions:
+            return
+        self.pacman.move()
         self.handle_collisions()
 
     def draw(self, *exclusions):
@@ -108,7 +118,8 @@ class PacmanGame:
 
     def update(self):
         c = self.maze.grid[self.pacman.ct_index].center
-        pygame.draw.circle(self.maze.visual, sprites.BLACK, (c[0], c[1]-24*self.scale), 9)
+        pygame.draw.circle(self.maze.visual, sprites.BLACK,
+                           (c[0], c[1]-24*self.scale), 9)
 
     def handle_collisions(self):
         for ghost in self.ghosts:
@@ -117,18 +128,32 @@ class PacmanGame:
                     continue
                 if ghost.mode == ghosts.FRIGHTENED:
                     print(f"pacman ate {ghost.name}!")
-                    self.draw(self.pacman, ghost)
-                    pygame.display.flip()
-                    time.sleep(1.5)
+                    self.pacman.ate_ghost = True
+                    self.just_eaten = ghost
                     ghost.eaten = True
                     ghost.gonna_double = True
                 else:
                     self.over = True
 
+    def handle_pause(self):
+        exclusions = [ghost for ghost in self.ghosts if not ghost.eaten or ghost is self.just_eaten]
+        self.step(*exclusions, self.pacman)
+        self.draw(self.pacman, self.just_eaten)
+        pygame.display.flip()
+        seconds_passed = self.clock.tick(60)/1000
+        self.ptimer -= seconds_passed
+        if self.ptimer < 0:
+            self.pacman.ate_ghost = False
+            self.just_eaten = None
+            self.ptimer = 1.5
+        
+
     def main(self):
-        clock = pygame.time.Clock()
         while not self.over:
-            print(self.blinky.blinking)
+            if self.pacman.ate_ghost:
+                print("handling pause!")
+                self.handle_pause()
+                continue
             self.over = True if pygame.QUIT in map(
                 lambda e: e.type, pygame.event.get()) else self.over
             self.handle_input()
@@ -141,9 +166,9 @@ class PacmanGame:
             if self.pacman.energized:
                 self.frighten()
                 self.pacman.energized = False
-            self.draw()
+            self.draw(self.just_eaten)
             pygame.display.flip()
-            seconds_passed = clock.tick(60)/1000
+            seconds_passed = self.clock.tick(60)/1000
             if self.mode != ghosts.FRIGHTENED:
                 self.time += seconds_passed
             else:

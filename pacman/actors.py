@@ -123,6 +123,7 @@ class Pacman(Actor):
         self.sprite_turn = 0
         self.size = 13*scale, 13*scale
         self.ate = False
+        self.ate_ghost = False
         self.energized = False
 
     def eat(self) -> None:

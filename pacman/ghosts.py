@@ -188,7 +188,6 @@ class PacManGhost(Actor):
         else:
             self.speed //= 4
             self.eaten = False
-            self.returning = False
             self.entering = False
             self.mode = CHASE
             self.blinking = False
@@ -252,9 +251,7 @@ class PacManGhost(Actor):
                          self.center-(self.size[0]/2, self.size[1]/2))
 
         else:
-            if self.sprite_turn > 10:
-                print(self, self.sprite_turn, self.blinking)
-            surface.blit(self.sprites[10*self.direction+(self.sprite_turn)],
+            surface.blit(self.sprites[10*self.direction+self.sprite_turn],
                          self.center-(self.size[0]/2, self.size[1]/2))
 
     def __str__(self):
