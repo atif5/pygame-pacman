@@ -113,15 +113,24 @@ class Pacman(Actor):
         sun = pygame.transform.scale(char_sprites.subsurface(
             pygame.Rect(37, 1, 13, 13)), (13*scale, 13*scale))
         self.sprites = [[sun], [sun], [sun], [sun]]
+        self.death_sprites = list()
         for j in range(4):
             for i in range(2):
                 sprite = pygame.transform.scale(char_sprites.subsurface(
                     pygame.Rect(5+i*16, 1+j*16, 13, 13)), (13*scale, 13*scale))
                 for _ in range(3):
                     self.sprites[j].append(sprite)
+
+        for i in range(11):
+            sprite = pygame.transform.scale(char_sprites.subsurface(
+                    pygame.Rect(53+i*16, 1, 13, 15)), (13*scale, 15*scale))
+            for _ in range(2):
+                self.death_sprites.append(sprite)
+
         ###  ###
         self.sprite_turn = 0
-        self.size = 13*scale, 13*scale
+        self.size = np.array((13*scale, 13*scale))
+        self.destination_offset = self.size//2
         self.ate = False
         self.ate_ghost = False
         self.energized = False
@@ -152,6 +161,10 @@ class Pacman(Actor):
         if abstract in FOOD:
             self.eat()
 
+    def die(self, surface, sprite_turn):
+        surface.blit(self.death_sprites[sprite_turn], self.center-self.destination_offset-(0, 2))
+
+
     def draw_on(self, surface):
         surface.blit(self.sprites[self.direction][self.sprite_turn],
-                     self.center-(self.size[0]/2, self.size[1]/2))
+                     self.center-self.destination_offset)

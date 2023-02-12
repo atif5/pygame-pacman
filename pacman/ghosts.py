@@ -103,7 +103,8 @@ class PacManGhost(Actor):
         self.sprite_turn = 0
         ###  ###
         self.mode = SCATTER
-        self.size = 14*scale, 14*scale
+        self.size = np.array((14*scale, 14*scale))
+        self.destination_offset = self.size//2
         self.next_direction = ndirection
         self.target = self.scatter_target
         self.gateway = GATEWAY*self.maze.scale
@@ -114,13 +115,15 @@ class PacManGhost(Actor):
         self.gonna_double = None
         self.blinking = False
 
-    def displace(self, game_context):
+    def displace(self, game_context) -> None:
         if self.handle_special():
             return
         if self.precise() or (self.exiting and self.at_gateway()):
             self.turn(self.direction)
             if self.exiting:
                 self.exiting = False
+            
+
         if self.in_tunnel() and not (self.eaten or self.speed == self.ispeed//2):
             self.center += self.velocity//2
         else:
@@ -185,13 +188,13 @@ class PacManGhost(Actor):
         elif dx:
             self.direction = RIGHT if np.sign(dx) == -1 else LEFT
             self.center += np.sign(dx)*DN[LEFT]
-        else:
+        else: #ghost has finished entering the pen
             self.speed //= 4
             self.eaten = False
             self.entering = False
             self.mode = CHASE
             self.blinking = False
-            self.exiting = True
+            self.exiting = True #immediately exit after finishing entering
 
     def exit(self) -> None: #most of the time
         dx, dy = self.center-GATEWAY*self.maze.scale
@@ -214,6 +217,7 @@ class PacManGhost(Actor):
         if self.eaten:
             if self.at_gateway():
                 self.entering = True
+                self.ct_index = 0
             elif precise:
                 if self.gonna_double:
                     self.speed *= 4
@@ -242,17 +246,17 @@ class PacManGhost(Actor):
         if self.mode == FRIGHTENED and not self.eaten:
             if self.blinking:
                 surface.blit(self.blinking_sprites[self.sprite_turn],
-                            self.center-(self.size[0]/2, self.size[1]/2))
+                            self.center-self.destination_offset)
             else:
                 surface.blit(self.frightened_sprites[self.sprite_turn],
-                         self.center-(self.size[0]/2, self.size[1]/2))
+                         self.center-self.destination_offset)
         elif self.eaten:
             surface.blit(self.eyes[self.direction],
-                         self.center-(self.size[0]/2, self.size[1]/2))
+                         self.center-self.destination_offset)
 
         else:
             surface.blit(self.sprites[10*self.direction+self.sprite_turn],
-                         self.center-(self.size[0]/2, self.size[1]/2))
+                         self.center-self.destination_offset)
 
     def __str__(self):
         return self.name

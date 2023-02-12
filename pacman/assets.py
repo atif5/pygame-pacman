@@ -28,7 +28,6 @@ class PacMaze:
 
     def draw_on(self, surface):
         surface.blit(self.visual, (0, 24*self.scale))
-        pass
         
     def __iter__(self):
         for abstract in self.map:
