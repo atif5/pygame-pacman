@@ -1,10 +1,10 @@
 # ![title](https://github.com/atif5/pygame-pacman/blob/master/title.png?raw=true")
  <p align="center">
-  <img src="https://github.com/atif5/pygame-pacman/blob/master/gameplay.gif?raw=true" alt="gameplay"/>
+  <img width=400, height=400 src="https://github.com/atif5/pygame-pacman/blob/master/gameplay.gif?raw=true" alt="gameplay"/>
  </p>
   
-### How to install and play  
- This project is still being developed, but you are free to play it at your own risk :)
+## How to install and play  
+ This project is still being developed, but you are free to play it at your own risk :trollface:
  
  I have provided a batch script for windows users to install and play the game for windows. It assumes that you have git installed.
  Only thing you need to is the run the batch file by double clicking on it, complete setting up python3 and then running `play.bat` after it's generated.
