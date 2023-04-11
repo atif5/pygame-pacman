@@ -1,5 +1,7 @@
 # ![title](https://github.com/atif5/pygame-pacman/blob/master/title.png?raw=true)
- ![some gameplay](https://github.com/atif5/pygame-pacman/blob/master/gameplay.gif?raw=true)
+ <p align="center">
+  <img src="https://github.com/atif5/pygame-pacman/blob/master/gameplay.gif?raw=true" alt="gameplay"/>
+ </p>
   
 ### How to install and play  
  This project is still being developed, but you are free to play it at your own risk :)
