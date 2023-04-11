@@ -1,5 +1,5 @@
 # ![title](https://github.com/atif5/pygame-pacman/blob/master/title.png?raw=true)
- <p align="center" style="margin-bottom:%10">
+ <p align="center" style="margin-bottom:%50">
   <img src="https://github.com/atif5/pygame-pacman/blob/master/gameplay.gif?raw=true" alt="gameplay"/>
  </p>
   
