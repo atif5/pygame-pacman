@@ -1,6 +1,6 @@
 # ![title](https://github.com/atif5/pygame-pacman/blob/master/title.png?raw=true)
- <p align="center" style="width:%20;height:%20">
-  <img src="https://github.com/atif5/pygame-pacman/blob/master/gameplay.gif?raw=true" alt="gameplay"/>
+ <p align="center">
+  <img src="https://github.com/atif5/pygame-pacman/blob/master/gameplay.gif?raw=true" alt="gameplay" style="width:%20;height:%20/>
  </p>
   
 ### How to install and play  
