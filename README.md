@@ -1,4 +1,4 @@
-# pygame-pacman
+# ![title](https://github.com/atif5/pygame-pacman/blob/master/title.png?raw=true)
  ![some gameplay](https://github.com/atif5/pygame-pacman/blob/master/gameplay.gif?raw=true)
   
 ### How to install and play  
