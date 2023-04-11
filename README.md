@@ -1,5 +1,4 @@
 # pygame-pacman
- A pacman clone made with pygame! (incomplete)
  ![some gameplay](https://github.com/atif5/pygame-pacman/blob/master/gameplay.gif?raw=true)
   
 ### How to install and play  
